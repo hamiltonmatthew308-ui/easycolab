@@ -220,6 +220,12 @@ extension StudioViewModel {
             return
         }
         oauthCodeText = ""
+        oauthErrorMessage = ""
+        lastOAuthURL = url
+        if showColabGuideSheet {
+            showColabGuideSheet = false
+            try? await Task.sleep(nanoseconds: 250_000_000)
+        }
         showOAuthCodeInput = true
         NSWorkspace.shared.open(url)
         statusMessage = switchingAccount
@@ -248,13 +254,18 @@ extension StudioViewModel {
     func submitGoogleOAuthCode() async {
         let code = oauthCodeText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !code.isEmpty else { return }
+        isSubmittingOAuthCode = true
+        oauthErrorMessage = ""
+        defer { isSubmittingOAuthCode = false }
         let prevEmail = accountEmail
         let wasLoggedIn = cliLoggedIn
         statusMessage = L("正在验证授权码并同步账户余额...", "Verifying authorization code & syncing CU balance...")
         let out = await runBridgeCommand(["auth_code", code], installIfMissing: true)
         guard let data = out.data(using: .utf8),
               let decoded = try? JSONDecoder().decode(BridgeAuthStatusResponse.self, from: data) else {
-            statusMessage = L("授权验证失败，请重试。", "Authorization verification failed. Please try again.")
+            let msg = L("授权验证失败，请重试。", "Authorization verification failed. Please try again.")
+            oauthErrorMessage = msg
+            statusMessage = msg
             return
         }
         if decoded.logged_in == true {
@@ -267,6 +278,7 @@ extension StudioViewModel {
             accountEmail = newEmail
             showOAuthCodeInput = false
             oauthCodeText = ""
+            oauthErrorMessage = ""
             officialCUBalance = decoded.paid_balance
             officialBurnRate = decoded.burn_rate_hourly
             activeVMCount = decoded.active_assignments ?? 0
@@ -279,10 +291,12 @@ extension StudioViewModel {
                 "Google account bound\(emailTag)! Available balance: \(String(format: "%.2f", decoded.paid_balance ?? 0)) CU"
             )
         } else {
-            statusMessage = L(
+            let msg = L(
                 "授权码无效: \(decoded.error ?? "请重新获取")",
                 "Invalid authorization code: \(decoded.error ?? "please generate a new code")"
             )
+            oauthErrorMessage = msg
+            statusMessage = msg
         }
     }
 

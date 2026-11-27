@@ -120,6 +120,9 @@ class StudioViewModel: ObservableObject {
     @Published var accountEmail: String = ""
     @Published var showOAuthCodeInput: Bool = false
     @Published var oauthCodeText: String = ""
+    @Published var lastOAuthURL: URL? = nil
+    @Published var isSubmittingOAuthCode: Bool = false
+    @Published var oauthErrorMessage: String = ""
     @Published var officialCUBalance: Double? = nil
 
     var displayAccountLabel: String {

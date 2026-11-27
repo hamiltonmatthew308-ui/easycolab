@@ -87,6 +87,9 @@ struct MainStudioView: View {
         .sheet(isPresented: $vm.showAddCustomModelSheet) {
             AddCustomHFModelMacSheet(vm: vm)
         }
+        .sheet(isPresented: $vm.showOAuthCodeInput) {
+            GoogleOAuthCodeSheet(vm: vm)
+        }
         .onAppear {
             if !UserDefaults.standard.bool(forKey: "hasSeenOnboardingGuide_v1") {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
