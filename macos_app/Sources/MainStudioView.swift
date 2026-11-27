@@ -87,9 +87,12 @@ struct MainStudioView: View {
         .sheet(isPresented: $vm.showAddCustomModelSheet) {
             AddCustomHFModelMacSheet(vm: vm)
         }
-        .sheet(isPresented: $vm.showOAuthCodeInput) {
-            GoogleOAuthCodeSheet(vm: vm)
-        }
+        .background(
+            Color.clear
+                .sheet(isPresented: $vm.showOAuthCodeInput) {
+                    GoogleOAuthCodeSheet(vm: vm)
+                }
+        )
         .onAppear {
             if !UserDefaults.standard.bool(forKey: "hasSeenOnboardingGuide_v1") {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -421,8 +424,13 @@ struct MainStudioView: View {
                 .fixedSize()
                 .help(L("切换其他 Google 账号或退出当前绑定", "Switch to another Google account or sign out"))
             } else {
-                Button(L("绑定", "Bind")) { Task { await vm.startGoogleOAuthLogin() } }
-                    .controlSize(.small)
+                HStack(spacing: 4) {
+                    Button(L("绑定", "Bind")) { Task { await vm.startGoogleOAuthLogin() } }
+                        .controlSize(.small)
+                    Button(L("填码", "Code")) { vm.showOAuthCodeInput = true }
+                        .controlSize(.small)
+                        .help(L("直接打开授权码粘贴弹窗", "Open auth code paste dialog"))
+                }
             }
         }
 
